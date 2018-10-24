@@ -14,7 +14,7 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		if parts[2] == "api" && len(parts) == 3 {
-
+			handlerTime(w, r)
 		}
 	}
 }

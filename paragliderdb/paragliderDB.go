@@ -6,5 +6,3 @@ type ServiceTime struct {
 	Info    string `json:"info"`
 	Version string `json:"version"`
 }
-
-// test
