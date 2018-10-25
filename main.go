@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func determineListenAddress() (string, error) {
@@ -16,12 +17,18 @@ func determineListenAddress() (string, error) {
 	return ":" + port, nil
 }
 
+func serverStart() {
+	paragliderdb.StartTime = time.Now()
+}
+
 func main() {
 
 	addr, err := determineListenAddress()
 	if err != nil {
 		log.Fatal(err)
 	}
-	http.HandleFunc("/paraglider", paragliderdb.RootHandler)
+	serverStart()
+	http.HandleFunc("/paragliding/", paragliderdb.RootHandler)
 	http.ListenAndServe(addr, nil)
+
 }
