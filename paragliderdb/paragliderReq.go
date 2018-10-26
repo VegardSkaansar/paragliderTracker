@@ -3,6 +3,8 @@ package paragliderdb
 import (
 	"net/http"
 	"strings"
+
+	igc "github.com/marni/goigc"
 )
 
 // RootHandler handles the root of the api
@@ -36,4 +38,36 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+}
+
+/*   This is the json format whenever u use get on the right path
+{
+	"H_date": <date from File Header, H-record>,
+	"pilot": <pilot>,
+	"glider": <glider>,
+	"glider_id": <glider_id>,
+	"track_length": <calculated total track length>
+	"track_src_url": <the original URL used to upload the track, ie. the URL used with POST>
+	}
+*/
+
+func trackIDToTrackMeta(url igc.Track, igc string) TrackMeta {
+	return TrackMeta{
+		url.Date,
+		url.Pilot,
+		url.GliderType,
+		url.GliderID,
+		TotalDistance(url),
+		igc,
+	}
+}
+
+// TotalDistance is the total distance of the track
+// and returns an int representing the length
+func TotalDistance(distance igc.Track) float64 {
+	totalDistance := 0.0
+	for i := 0; i < len(distance.Points)-1; i++ {
+		totalDistance += distance.Points[i].Distance(distance.Points[i+1])
+	}
+	return totalDistance
 }

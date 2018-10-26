@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // ------------------------------------------------------------------------
@@ -20,17 +21,17 @@ type ServiceTime struct {
 
 // TrackMeta is the data for a special Igc file
 type TrackMeta struct {
-	Date        string  `json:"H_date"`
-	Pilot       string  `json:"pilot"`
-	Glider      string  `json:"glider"`
-	GliderID    string  `json:"glider_id"`
-	TrackLength float64 `json:"track_length"`
-	TrackSrcURL string  `json:"track_src_url"`
+	Date        time.Time `json:"H_date"`
+	Pilot       string    `json:"pilot"`
+	Glider      string    `json:"glider"`
+	GliderID    string    `json:"glider_id"`
+	TrackLength float64   `json:"track_length"`
+	TrackSrcURL string    `json:"track_src_url"`
 }
 
-// TrackURL structure for json body when posting
-type TrackURL struct {
-	URL string `json:"url"`
+// TrackID structure for json body when posting
+type TrackID struct {
+	ID string `json:"id"`
 }
 
 // ------------------------------------------------------------------------
@@ -48,8 +49,8 @@ var StartTime time.Time
 // TrackerDB is the interface we use to navigate our database
 type TrackerDB interface {
 	Init()
-	AddURL(url TrackURL) error
-	GetID()
+	AddURL(url TrackID) error
+	GetTrackID() (TrackID, error)
 	GetAll()
 }
 
@@ -69,7 +70,7 @@ func (db *MongoDB) Init() {
 	defer session.Close()
 
 	index := mgo.Index{
-		Key:        []string{"url"},
+		Key:        []string{"id"},
 		Unique:     true,
 		DropDups:   true,
 		Background: true,
@@ -84,14 +85,14 @@ func (db *MongoDB) Init() {
 }
 
 // AddURL adds a new URL to the database (mongodb)
-func (db *MongoDB) AddURL(url TrackURL) error {
+func (db *MongoDB) AddURL(id TrackID) error {
 	session, err := mgo.Dial(db.DatabaseURL)
 	if err != nil {
 		panic(err)
 	}
 	defer session.Close()
 
-	err = session.DB(db.DatabaseName).C(db.CollectionName).Insert(url)
+	err = session.DB(db.DatabaseName).C(db.CollectionName).Insert(id)
 
 	if err != nil {
 		fmt.Printf("Somethings wrong with Insert():%v", err.Error())
@@ -99,4 +100,21 @@ func (db *MongoDB) AddURL(url TrackURL) error {
 	}
 
 	return nil
+}
+
+// GetTrackID gets an id and and we return the trackmeta for this id
+func (db *MongoDB) GetTrackID(id string) (TrackID, bool) {
+	session, err := mgo.Dial(db.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+	url := TrackID{}
+	ok := true
+
+	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(bson.M{"id": id}).One(&url)
+
+	if err != nil {
+		ok = false
+	}
+	return url, ok
 }
