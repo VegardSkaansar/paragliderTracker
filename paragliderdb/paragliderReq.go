@@ -23,19 +23,34 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 
 	// from here we know the root has to be /paragliding/ or we would have got an 404 error
 	// so here we will send it to the time handler
-	if parts[2] == "api" && len(parts) == 3 {
-		if r.Method == "GET" {
-			handlerTime(w, r)
-		} else {
-			// error status code wrong method from client side
-			http.Error(w, http.StatusText(405), 405)
-			return
+	if parts[2] == "api" {
+		if len(parts) == 3 {
+			if r.Method == "GET" {
+				handlerTime(w, r)
+
+			} else {
+				// error status code wrong method from client side
+				http.Error(w, http.StatusText(405), 405)
+				return
+			}
 		}
 
 	} else {
 		// error some rubbish url
 		http.Error(w, http.StatusText(404), 404)
 		return
+	}
+
+	// here we know if the parts[2] was api but not len(3) we will
+	// check if the lenght was 4 and parts[3] is not rubbish
+
+	if parts[3] == "track" {
+		if len(parts) == 4 {
+			// will respond with array of all tracks id
+			if r.Method == "GET" {
+				HandlerTrackArray(w, r)
+			}
+		}
 	}
 
 }

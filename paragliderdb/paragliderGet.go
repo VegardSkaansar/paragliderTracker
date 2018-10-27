@@ -49,3 +49,9 @@ func getServerTime() string {
 
 	return fmt.Sprintf("P%dY%dM%dD%dH%dM%dS", years, months, days, hours, minute, seconds)
 }
+
+//HandlerTrackArray handles the database request and gives us
+// all the ids of the tracks stored
+func HandlerTrackArray(w http.ResponseWriter, r http.Request) {
+
+}
