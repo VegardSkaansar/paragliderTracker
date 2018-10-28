@@ -2,6 +2,7 @@ package paragliderdb
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -63,9 +64,10 @@ var GlobalDB TrackerDB
 // and returns what we need or store what we asked for
 type TrackerDB interface {
 	Init()
-	AddURL(meta TrackMeta) error
+	AddURL(meta TrackMeta, newID TrackID) error
 	GetTrackID(id string) (TrackID, bool)
 	GetAllID() []TrackID
+	CheckIfURLIsAlreadyTracked(url string) bool
 }
 
 // ------------------------------------------------------------------------
@@ -103,7 +105,7 @@ func (db *MongoDB) Init() {
 }
 
 // AddURL adds a new URL to the database (mongodb)
-func (db *MongoDB) AddURL(meta TrackMeta) error {
+func (db *MongoDB) AddURL(meta TrackMeta, newID TrackID) error {
 	session, err := mgo.Dial(db.DatabaseURL)
 	if err != nil {
 		panic(err)
@@ -118,7 +120,7 @@ func (db *MongoDB) AddURL(meta TrackMeta) error {
 
 	col := collection{
 		bson.NewObjectId(),
-		NewUniqueParagliderID(),
+		newID,
 		meta,
 	}
 
@@ -132,22 +134,46 @@ func (db *MongoDB) AddURL(meta TrackMeta) error {
 	return nil
 }
 
-// GetTrackID gets an id and and we return the trackmeta for this id
+// GetTrackID gets an id and and we return if this for this id
 func (db *MongoDB) GetTrackID(id string) (TrackID, bool) {
 	session, err := mgo.Dial(db.DatabaseURL)
 	if err != nil {
 		panic(err)
 	}
 	defer session.Close()
-	url := TrackID{}
+	idT := TrackID{}
 	ok := true
 
-	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(bson.M{"id": id}).Select(bson.M{"paragliderid": 1}).One(&url)
+	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(nil).Select(bson.M{"paragliderid": bson.M{"$elemMatch": bson.M{"id": id}}}).One(&idT)
 
 	if err != nil {
 		ok = false
 	}
-	return url, ok
+	return idT, ok
+}
+
+// CheckIfURLIsAlreadyTracked handles the situation when mulitple
+// people post the same track
+func (db *MongoDB) CheckIfURLIsAlreadyTracked(url string) bool {
+	session, err := mgo.Dial(db.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+	var idT []TrackID
+
+	// we go to the db and the collection and check if we already have this tracksrcurl
+	// if not we wil get a empty body and this equals 0 when we ask for lenght
+	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(nil).Select(bson.M{"track": bson.M{"$elemMatch": bson.M{"tracksrcurl": url}}}).All(&idT)
+	log.Println(len(idT))
+	if err != nil {
+		return false
+	}
+	if len(idT) != 0 {
+		return false
+	}
+	return true
+
 }
 
 // GetAllID we searching through the db and finds all the id and list it here

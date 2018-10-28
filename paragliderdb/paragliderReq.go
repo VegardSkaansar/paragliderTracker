@@ -101,7 +101,7 @@ func TotalDistance(distance igc.Track) float64 {
 func NewUniqueParagliderID() TrackID {
 	id, err := GenerateRandomString(MAXLENGTHID)
 	if err != nil {
-		fmt.Errorf("Something wrong happend with the random generator", err)
+		fmt.Println("Something wrong happend with the random generator", err)
 		return TrackID{http.StatusText(500)}
 	}
 	return TrackID{id}
@@ -128,7 +128,8 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 func GenerateRandomString(s int) (string, error) {
 	b, err := GenerateRandomBytes(s)
 	if err != nil {
-		fmt.Errorf("Something is wrong with the random generator")
+		fmt.Println("Something happend with the random generator")
+		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(b), err
 }

@@ -2,6 +2,8 @@ package paragliderdb
 
 import (
 	"encoding/json"
+	"io"
+	"log"
 	"net/http"
 )
 
@@ -29,5 +31,22 @@ func HandlerPostURL(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Something is wrong with url", http.StatusBadRequest)
 	}
-	GlobalDB.AddURL(igcTrack)
+	ok := GlobalDB.CheckIfURLIsAlreadyTracked(i.URL)
+	log.Println(ok)
+	if ok {
+		u := NewUniqueParagliderID()
+		GlobalDB.AddURL(igcTrack, u)
+
+		// with help of marshal we transform this to a json response
+		jsonResponse, err := json.Marshal(u)
+		if err != nil {
+			http.Error(w, "cant transform the new id to bytes", 500)
+		}
+		// we write a json response with the id
+		w.Write(jsonResponse)
+
+	} else {
+		w.WriteHeader(http.StatusAlreadyReported)
+		io.WriteString(w, "This Track are already requested and stored in database")
+	}
 }
