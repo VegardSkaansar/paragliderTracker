@@ -156,6 +156,7 @@ func (db *MongoDB) CheckIfURLIsAlreadyTracked(url string) bool {
 	log.Println(len(idT))
 	if err != nil {
 		return false
+
 	}
 	if len(idT) != 0 {
 		return false

@@ -37,7 +37,7 @@ func main() {
 	// Initialising the global db
 	paragliderdb.GlobalDB = &paragliderdb.MongoDB{
 		"mongodb://Vegard:Mira1234@ds143893.mlab.com:43893/paragliderdb",
-		"paragliderDB",
+		"paragliderdb",
 		"tracks",
 	}
 
