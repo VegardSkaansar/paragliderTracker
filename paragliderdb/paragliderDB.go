@@ -81,6 +81,13 @@ type MongoDB struct {
 	CollectionName string
 }
 
+// this is just used for making the collection structure
+type collection struct {
+	ID           bson.ObjectId `bson:"_id,omitempty"`
+	ParagliderID TrackID
+	Track        TrackMeta
+}
+
 // Init function initilises the mongodb
 func (db *MongoDB) Init() {
 	session, err := mgo.Dial(db.DatabaseURL)
@@ -111,12 +118,6 @@ func (db *MongoDB) AddURL(meta TrackMeta, newID TrackID) error {
 		panic(err)
 	}
 	defer session.Close()
-
-	type collection struct {
-		ID           bson.ObjectId `bson:"_id,omitempty"`
-		ParagliderID TrackID
-		Track        TrackMeta
-	}
 
 	col := collection{
 		bson.NewObjectId(),
@@ -184,13 +185,17 @@ func (db *MongoDB) GetAllID() []TrackID {
 	}
 	defer session.Close()
 
-	var all []TrackID
+	var all []collection
+	var allID []TrackID
 
-	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(bson.M{}).Select(bson.M{"id": 1}).All(&all)
+	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(bson.M{}).All(&all)
 
 	if err != nil {
 		return []TrackID{}
 	}
+	for _, data := range all {
+		allID = append(allID, TrackID{data.ParagliderID.ID})
+	}
 
-	return all
+	return allID
 }

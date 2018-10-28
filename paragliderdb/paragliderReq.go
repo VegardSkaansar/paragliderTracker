@@ -57,6 +57,8 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, http.StatusText(405), 405)
 			}
+		} else {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		}
 	}
 }
