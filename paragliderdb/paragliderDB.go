@@ -96,19 +96,6 @@ func (db *MongoDB) Init() {
 	}
 	defer session.Close()
 
-	index := mgo.Index{
-		Key:        []string{"id"},
-		Unique:     true,
-		DropDups:   true,
-		Background: true,
-		Sparse:     true,
-	}
-
-	err = session.DB(db.DatabaseName).C(db.CollectionName).EnsureIndex(index)
-	if err != nil {
-		panic(err)
-	}
-
 }
 
 // AddURL adds a new URL to the database (mongodb)
