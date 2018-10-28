@@ -51,7 +51,9 @@ func getServerTime() string {
 }
 
 //HandlerTrackArray handles the database request and gives us
-// all the ids of the tracks stored
-func HandlerTrackArray(w http.ResponseWriter, r http.Request) {
+// all the ids of the tracks stored in a array
+func HandlerTrackArray(w http.ResponseWriter, r *http.Request) {
+	all := GlobalDB.GetAllID()
+	json.NewEncoder(w).Encode(&all)
 
 }

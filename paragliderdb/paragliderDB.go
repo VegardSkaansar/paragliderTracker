@@ -35,6 +35,14 @@ type TrackID struct {
 }
 
 // ------------------------------------------------------------------------
+// -                 -- GLOBAL Const Variables --                         -
+//-------------------------------------------------------------------------
+
+// MAXLENGTHID variable for the lenght of the random crypto generator for
+// paragliderID, this will make it easier to track the length
+const MAXLENGTHID = 6
+
+// ------------------------------------------------------------------------
 // -                 -- GLOBAL Variables --                               -
 //-------------------------------------------------------------------------
 
@@ -42,17 +50,27 @@ type TrackID struct {
 // when the server starts
 var StartTime time.Time
 
+// GlobalDB is the global variable that will store and find all our
+// information from the clients requests
+var GlobalDB TrackerDB
+
 // ------------------------------------------------------------------------
-// -                 -- MongoDB --                                        -
+// -                 -- Interfaces --                                     -
 //-------------------------------------------------------------------------
 
 // TrackerDB is the interface we use to navigate our database
+// this is the interface that handles all our request
+// and returns what we need or store what we asked for
 type TrackerDB interface {
 	Init()
-	AddURL(url TrackID) error
-	GetTrackID() (TrackID, error)
-	GetAll()
+	AddURL(meta TrackMeta) error
+	GetTrackID(id string) (TrackID, bool)
+	GetAllID() []TrackID
 }
+
+// ------------------------------------------------------------------------
+// -                 -- MongoDB --                                        -
+//-------------------------------------------------------------------------
 
 // MongoDB here we store the information about connection
 type MongoDB struct {
@@ -85,14 +103,26 @@ func (db *MongoDB) Init() {
 }
 
 // AddURL adds a new URL to the database (mongodb)
-func (db *MongoDB) AddURL(id TrackID) error {
+func (db *MongoDB) AddURL(meta TrackMeta) error {
 	session, err := mgo.Dial(db.DatabaseURL)
 	if err != nil {
 		panic(err)
 	}
 	defer session.Close()
 
-	err = session.DB(db.DatabaseName).C(db.CollectionName).Insert(id)
+	type collection struct {
+		ID           bson.ObjectId `bson:"_id,omitempty"`
+		ParagliderID TrackID
+		Track        TrackMeta
+	}
+
+	col := collection{
+		bson.NewObjectId(),
+		NewUniqueParagliderID(),
+		meta,
+	}
+
+	err = session.DB(db.DatabaseName).C(db.CollectionName).Insert(col)
 
 	if err != nil {
 		fmt.Printf("Somethings wrong with Insert():%v", err.Error())
@@ -108,13 +138,33 @@ func (db *MongoDB) GetTrackID(id string) (TrackID, bool) {
 	if err != nil {
 		panic(err)
 	}
+	defer session.Close()
 	url := TrackID{}
 	ok := true
 
-	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(bson.M{"id": id}).One(&url)
+	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(bson.M{"id": id}).Select(bson.M{"paragliderid": 1}).One(&url)
 
 	if err != nil {
 		ok = false
 	}
 	return url, ok
+}
+
+// GetAllID we searching through the db and finds all the id and list it here
+func (db *MongoDB) GetAllID() []TrackID {
+	session, err := mgo.Dial(db.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	var all []TrackID
+
+	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(bson.M{}).Select(bson.M{"id": 1}).All(&all)
+
+	if err != nil {
+		return []TrackID{}
+	}
+
+	return all
 }

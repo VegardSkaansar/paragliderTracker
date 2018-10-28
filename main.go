@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"goprojects/paraglider/paragliderdb"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"time"
@@ -19,6 +20,10 @@ func determineListenAddress() (string, error) {
 
 func serverStart() {
 	paragliderdb.StartTime = time.Now()
+	// this makes a random seed for our program
+	// this will accutally help us to get a random
+	// number
+	rand.Seed(time.Now().UnixNano())
 }
 
 func main() {
@@ -28,6 +33,16 @@ func main() {
 		log.Fatal(err)
 	}
 	serverStart()
+
+	// Initialising the global db
+	paragliderdb.GlobalDB = &paragliderdb.MongoDB{
+		"mongodb://localhost",
+		"paragliderDB",
+		"tracks",
+	}
+
+	paragliderdb.GlobalDB.Init()
+
 	http.HandleFunc("/paragliding/", paragliderdb.RootHandler)
 	http.ListenAndServe(addr, nil)
 
