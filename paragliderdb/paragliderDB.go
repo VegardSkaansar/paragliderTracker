@@ -35,6 +35,15 @@ type TrackID struct {
 	ID string `json:"id"`
 }
 
+// Ticker handles the ticker date of whole collection
+type Ticker struct {
+	Tlatest    bson.ObjectId `json:"t_latest"`
+	Tstart     bson.ObjectId `json:"t_start"`
+	Tstop      bson.ObjectId `json:"t_stop"`
+	Tracks     []string      `json:"tracks"`
+	Processing time.Duration `json: "processing"`
+}
+
 // ------------------------------------------------------------------------
 // -                 -- GLOBAL Const Variables --                         -
 //-------------------------------------------------------------------------
@@ -42,6 +51,10 @@ type TrackID struct {
 // MAXLENGTHID variable for the lenght of the random crypto generator for
 // paragliderID, this will make it easier to track the length
 const MAXLENGTHID = 6
+
+// TICKERIDLENGTH variable for the length of how many id represented in
+// ticker struct
+const TICKERIDLENGTH = 5
 
 // ------------------------------------------------------------------------
 // -                 -- GLOBAL Variables --                               -
@@ -69,6 +82,8 @@ type TrackerDB interface {
 	GetAllID() []TrackID
 	CheckIfURLIsAlreadyTracked(url string) bool
 	GetTrackMeta(id string) TrackMeta
+	GetLatestTimestamp() Ticker
+	GetLatestObjectID() bson.ObjectId
 }
 
 // ------------------------------------------------------------------------
@@ -149,21 +164,22 @@ func (db *MongoDB) CheckIfURLIsAlreadyTracked(url string) bool {
 		panic(err)
 	}
 	defer session.Close()
-	var idT []TrackID
 
-	// we go to the db and the collection and check if we already have this tracksrcurl
-	// if not we wil get a empty body and this equals 0 when we ask for lenght
-	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(nil).Select(bson.M{"track": bson.M{"$elemMatch": bson.M{"tracksrcurl": url}}}).All(&idT)
-	log.Println(len(idT))
+	var all []collection
+
+	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(bson.M{}).All(&all)
 	if err != nil {
 		return false
-
 	}
-	if len(idT) != 0 {
-		return false
+	log.Println(all)
+	log.Println(len(all))
+
+	for _, data := range all {
+		if data.Track.TrackSrcURL == url {
+			return false
+		}
 	}
 	return true
-
 }
 
 // GetAllID we searching through the db and finds all the id and list it here
@@ -204,4 +220,51 @@ func (db *MongoDB) GetTrackMeta(id string) TrackMeta {
 	trackda := TrackMeta{trackdata.Track.Date, trackdata.Track.Pilot, trackdata.Track.Glider, trackdata.Track.GliderID, trackdata.Track.TrackLength, trackdata.Track.TrackSrcURL}
 	log.Println(trackda)
 	return trackda
+}
+
+//GetLatestTimestamp gives us the timestamp of latest added track
+func (db *MongoDB) GetLatestTimestamp() Ticker {
+	session, err := mgo.Dial(db.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	var result []Ticker
+	//timestamp := time.Unix()
+
+	//filter := bson.M{"_id": bson.M{"$gt": bson.NewObjectIdWithTime(time.Unix(timestamp+1, 0))}}
+	//session.DB(db.DatabaseName).C(db.CollectionName).Find(filter).Sort("_id").All(&result)
+
+	log.Println(result)
+	return Ticker{}
+
+}
+
+//GetLatestObjectID handles all collections and give us theobjectID
+func (db *MongoDB) GetLatestObjectID() bson.ObjectId {
+	session, err := mgo.Dial(db.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	var col []collection
+	var result []bson.ObjectId
+
+	session.DB(db.DatabaseName).C(db.CollectionName).Find(nil).All(&col)
+
+	for _, data := range col {
+		result = append(result, data.ID)
+	}
+
+	ob := result[0]
+
+	for i := 1; i < len(result); i++ {
+		if result[i].Time().Unix() > ob.Time().Unix() {
+			ob = result[i]
+		}
+	}
+	log.Println(ob)
+	return ob
 }

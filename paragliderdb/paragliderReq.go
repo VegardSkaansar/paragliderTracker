@@ -57,9 +57,17 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, http.StatusText(405), 405)
 			}
+		} else if parts[3] == "ticker" && parts[2] == "api" {
+			//handles api/ticker and we know parts[1] are paragliding
+			if r.Method == "GET" {
+				//		HandlesTicker(w, r)
+			} else {
+				http.Error(w, http.StatusText(405), 405)
+			}
 		} else {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		}
+
 	}
 
 	// here we know that when len is 5 the url should be
@@ -76,9 +84,14 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, http.StatusText(405), 405)
 			}
+		} else if parts[3] == "ticker" && parts[2] == "api" && parts[4] == "latest" {
+			// handles latest timestamp
+			HandleLatestTimestamp(w, r)
+
 		} else {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		}
+
 	}
 
 	// here the length is 6 and the url should be api/track/id/field

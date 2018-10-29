@@ -3,9 +3,14 @@ package paragliderdb
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
+
+// ------------------------------------------------------------------------
+// -                 -- Handles api --                                    -
+//-------------------------------------------------------------------------
 
 func handlerTime(w http.ResponseWriter, r *http.Request) {
 	Timediff := getServerTime()
@@ -94,4 +99,15 @@ func HandlesField(w http.ResponseWriter, r *http.Request, field string, id strin
 		panic("shouldnt happend with the fields above")
 	}
 
+}
+
+// ------------------------------------------------------------------------
+// -                 -- Handles ticker --                                 -
+//-------------------------------------------------------------------------
+
+// HandleLatestTimestamp check the db for the latest added track
+func HandleLatestTimestamp(w http.ResponseWriter, r *http.Request) {
+	one := GlobalDB.GetLatestObjectID()
+	log.Println(one)
+	json.NewEncoder(w).Encode(one.Time().Unix())
 }
