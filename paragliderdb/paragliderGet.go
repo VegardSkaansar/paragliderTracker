@@ -122,6 +122,10 @@ func HandlesTicker(w http.ResponseWriter, r *http.Request, startprocess int64) {
 		for i := 0; i < len(GlobalDB.GetAllID()); i++ {
 			tra = append(tra, GlobalDB.GetAllID()[i].ID)
 		}
+	} else {
+		for i := 0; i <= TICKERIDLENGTH; i++ {
+			tra = append(tra, GlobalDB.GetAllID()[i].ID)
+		}
 	}
 
 	newTicker := Ticker{start.Time().Unix(), stop.Time().Unix(), GlobalDB.GetLatestObjectID().Time().Unix(), tra, process}
@@ -130,6 +134,67 @@ func HandlesTicker(w http.ResponseWriter, r *http.Request, startprocess int64) {
 }
 
 // HandleTimestamp handles timestamp from client
-func HandleTimestamp(w http.ResponseWriter, r *http.Request, i int64) {
-	GlobalDB.RequestTimestamp(i)
+func HandleTimestamp(w http.ResponseWriter, r *http.Request, i int64, startprocess int64) {
+	process := (time.Now().UnixNano() / int64(time.Millisecond)) - startprocess
+	start, stop := GlobalDB.GetTicker()
+	strID := GlobalDB.RequestTimestamp(i)
+	var tra []string
+
+	if len(strID) <= TICKERIDLENGTH {
+		for i := 0; i < len(strID); i++ {
+			tra = append(tra, strID[i])
+		}
+	} else {
+		for i := 0; i <= TICKERIDLENGTH; i++ {
+			tra = append(tra, strID[i])
+		}
+	}
+
+	newTicker := Ticker{start.Time().Unix(), stop.Time().Unix(), GlobalDB.GetLatestObjectID().Time().Unix(), tra, process}
+
+	json.NewEncoder(w).Encode(&newTicker)
+
+}
+
+// WebhookGetHandler handles a webhook get id
+func WebhookGetHandler(w http.ResponseWriter, r *http.Request, id string) {
+	str, ok := GlobalDB.GetWebhook(id)
+
+	if !ok {
+		http.Error(w, http.StatusText(500), 500)
+		return
+	}
+
+	json.NewEncoder(w).Encode(str)
+}
+
+// WebhookDeleteHandler handles deleting a webhook
+func WebhookDeleteHandler(w http.ResponseWriter, r *http.Request, id string) {
+
+	str, ok := GlobalDB.GetWebhook(id)
+
+	if !ok {
+		http.Error(w, http.StatusText(500), 500)
+		return
+	}
+
+	okk := GlobalDB.DeleteWebhook(id)
+
+	if !okk {
+		http.Error(w, http.StatusText(500), 500)
+		return
+	}
+
+	jsonResponse, err := json.Marshal(str)
+	if err != nil {
+		http.Error(w, "cant transform the new id to bytes", 500)
+	}
+	// we write a json response with the with info
+	w.Write(jsonResponse)
+
+}
+
+// HandlerAdmin delete all records
+func HandlerAdmin(w http.ResponseWriter, r *http.Request) {
+	GlobalDB.AdmimDeleteAll()
 }

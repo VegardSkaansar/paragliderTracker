@@ -39,6 +39,7 @@ func main() {
 		"mongodb://Vegard:Mira1234@ds143893.mlab.com:43893/paragliderdb",
 		"paragliderdb",
 		"tracks",
+		"webhooks",
 	}
 
 	paragliderdb.GlobalDB.Init()

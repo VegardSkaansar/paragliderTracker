@@ -50,3 +50,34 @@ func HandlerPostURL(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "This Track are already requested and stored in database")
 	}
 }
+
+// WebhookPost handles a webhook post
+func WebhookPost(w http.ResponseWriter, r *http.Request) {
+
+	var webreq Webhookinfo
+
+	err := json.NewDecoder(r.Body).Decode(&webreq)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if r.Body == nil {
+		http.Error(w, "POST request must have a JSON body", http.StatusBadRequest)
+		return
+	}
+
+	err = GlobalDB.AddWebhook(webreq)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	jsonResponse, err := json.Marshal(webreq)
+	if err != nil {
+		http.Error(w, "cant transform the new id to bytes", 500)
+	}
+	// we write a json response with the with info
+	w.Write(jsonResponse)
+
+}

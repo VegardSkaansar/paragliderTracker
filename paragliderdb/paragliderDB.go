@@ -84,7 +84,12 @@ type TrackerDB interface {
 	GetTrackMeta(id string) TrackMeta
 	GetTicker() (bson.ObjectId, bson.ObjectId)
 	GetLatestObjectID() bson.ObjectId
-	RequestTimestamp(i int64)
+	RequestTimestamp(i int64) []string
+	TrackAmount() int
+	AddWebhook(w Webhookinfo) error
+	GetWebhook(id string) (Webhookinfo, bool)
+	DeleteWebhook(id string) bool
+	AdmimDeleteAll()
 }
 
 // ------------------------------------------------------------------------
@@ -93,9 +98,10 @@ type TrackerDB interface {
 
 // MongoDB here we store the information about connection
 type MongoDB struct {
-	DatabaseURL    string
-	DatabaseName   string
-	CollectionName string
+	DatabaseURL           string
+	DatabaseName          string
+	CollectionName        string
+	WebhookCollectionName string
 }
 
 // this is just used for making the collection structure
@@ -286,11 +292,103 @@ func (db *MongoDB) GetLatestObjectID() bson.ObjectId {
 }
 
 // RequestTimestamp finds all objects with higher timestamp than i
-func (db *MongoDB) RequestTimestamp(i int64) {
+func (db *MongoDB) RequestTimestamp(timestamp int64) []string {
 	session, err := mgo.Dial(db.DatabaseURL)
 	if err != nil {
 		panic(err)
 	}
 	defer session.Close()
 
+	var results []collection
+	var IDs []string
+
+	filter := bson.M{"_id": bson.M{"$gt": bson.NewObjectIdWithTime(time.Unix(timestamp+1, 0))}}
+	session.DB(db.DatabaseName).C(db.CollectionName).Find(filter).Sort("_id").All(&results)
+
+	for _, data := range results {
+		IDs = append(IDs, data.ParagliderID.ID)
+	}
+	return IDs
+}
+
+// TrackAmount how many tracks in the db of tracks
+func (db *MongoDB) TrackAmount() int {
+	session, err := mgo.Dial(db.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	amount, err := session.DB(db.DatabaseName).C(db.CollectionName).Count()
+
+	if err != nil {
+		fmt.Printf("Error in count(): %v", err.Error())
+		return -1
+	}
+
+	return amount
+}
+
+// GetWebhooksToInvoke handles a invoke
+
+// AddWebhook handles adding a webhook
+func (db *MongoDB) AddWebhook(w Webhookinfo) error {
+	session, err := mgo.Dial(db.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	w.LatestInvokedTrack = GlobalDB.GetLatestObjectID()
+	w.ID = bson.NewObjectId()
+	w.WebhookID = NewUniqueParagliderID().ID
+
+	err = session.DB(db.DatabaseName).C(db.WebhookCollectionName).Insert(w)
+	if err != nil {
+		fmt.Printf("Error in addWebhook(): %v", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// GetWebhook handles
+func (db *MongoDB) GetWebhook(id string) (Webhookinfo, bool) {
+	session, err := mgo.Dial(db.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	webhook := Webhookinfo{}
+
+	err = session.DB(db.DatabaseName).C(db.WebhookCollectionName).Find(bson.M{"webhookid": id}).One(&webhook)
+	if err != nil {
+		return webhook, false
+	}
+
+	return webhook, true
+}
+
+// DeleteWebhook handles a webhook and deletes it
+func (db *MongoDB) DeleteWebhook(id string) bool {
+	session, err := mgo.Dial(db.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	err = session.DB(db.DatabaseName).C(db.WebhookCollectionName).Remove(bson.M{"webhook": id})
+
+	return err == nil
+}
+
+// AdmimDeleteAll deletes all of the track in db
+func (db *MongoDB) AdmimDeleteAll() {
+	session, err := mgo.Dial(db.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+	session.DB(db.DatabaseName).C(db.CollectionName).RemoveAll(bson.M{})
 }

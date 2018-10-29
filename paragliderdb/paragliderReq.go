@@ -3,6 +3,7 @@ package paragliderdb
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -93,8 +94,21 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 
 		} else if parts[3] == "ticker" && parts[2] == "api" {
 			if nr, err := strconv.Atoi(parts[4]); err == nil {
-				HandleTimestamp(w, r, int64(nr))
+				HandleTimestamp(w, r, int64(nr), startprocess)
 			}
+
+		} else if parts[3] == "webhook" && parts[2] == "api" && parts[4] == "new_track" {
+			if r.Method == "POST" {
+				WebhookPost(w, r)
+			} else {
+				http.Error(w, http.StatusText(405), 405)
+			}
+
+		} else if parts[2] == "admin" && parts[3] == "api" && parts[4] == "tracks" {
+			HandlerAdmin(w, r)
+		} else if parts[2] == "admin" && parts[3] == "api" && parts[4] == "track_count" {
+			json.NewEncoder(w).Encode(GlobalDB.TrackAmount())
+
 		} else {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		}
@@ -118,6 +132,14 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				http.Error(w, http.StatusText(405), 405)
 				return
+			}
+		} else if parts[3] == "webhook" && parts[2] == "api" && parts[4] == "new_track" {
+			if r.Method == "GET" {
+				WebhookGetHandler(w, r, parts[5])
+			} else if r.Method == "DELETE" {
+				WebhookDeleteHandler(w, r, parts[5])
+			} else {
+				http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			}
 		} else {
 			http.Error(w, "rubbish url, Please enter a valid path", http.StatusBadRequest)
