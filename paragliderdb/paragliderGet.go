@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -74,45 +73,21 @@ func HandlesField(w http.ResponseWriter, r *http.Request, field string, id strin
 	// a temporary struct for the field we are going give back as json
 	switch field {
 	case "H_date":
-		type temp struct {
-			Date string `json:"H_date"`
-		}
-		date := temp{single.Date.String()}
-		json.NewEncoder(w).Encode(&date)
+		json.NewEncoder(w).Encode(single.Date)
 	case "pilot":
-		type temp struct {
-			Temp string `json:"pilot"`
-		}
-		tempp := temp{single.Pilot}
-		json.NewEncoder(w).Encode(&tempp)
+		json.NewEncoder(w).Encode(single.Pilot)
 
 	case "glider":
-		type temp struct {
-			Temp string `json:"glider"`
-		}
-		tempp := temp{single.Glider}
-		json.NewEncoder(w).Encode(&tempp)
+		json.NewEncoder(w).Encode(single.Glider)
 
 	case "glider_id":
-		type temp struct {
-			Temp string `json:"glider_id"`
-		}
-		tempp := temp{single.GliderID}
-		json.NewEncoder(w).Encode(&tempp)
+		json.NewEncoder(w).Encode(single.GliderID)
 
 	case "track_length":
-		type temp struct {
-			Temp string `json:"track_length"`
-		}
-		tempp := temp{strconv.Itoa(int(single.TrackLength))}
-		json.NewEncoder(w).Encode(&tempp)
+		json.NewEncoder(w).Encode(single.TrackLength)
 
 	case "track_src_url":
-		type temp struct {
-			Temp string `json:"track_src_url"`
-		}
-		tempp := temp{single.TrackSrcURL}
-		json.NewEncoder(w).Encode(&tempp)
+		json.NewEncoder(w).Encode(single.TrackSrcURL)
 
 	default:
 		// if this happends something is wrong
