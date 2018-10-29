@@ -65,9 +65,10 @@ var GlobalDB TrackerDB
 type TrackerDB interface {
 	Init()
 	AddURL(meta TrackMeta, newID TrackID) error
-	GetTrackID(id string) (TrackID, bool)
+	GetTrackField(id string) (TrackID, bool)
 	GetAllID() []TrackID
 	CheckIfURLIsAlreadyTracked(url string) bool
+	GetTrackMeta(id string) TrackMeta
 }
 
 // ------------------------------------------------------------------------
@@ -122,8 +123,8 @@ func (db *MongoDB) AddURL(meta TrackMeta, newID TrackID) error {
 	return nil
 }
 
-// GetTrackID gets an id and and we return if this for this id
-func (db *MongoDB) GetTrackID(id string) (TrackID, bool) {
+// GetTrackField gets an id and and we return if this for this id
+func (db *MongoDB) GetTrackField(field string) (TrackID, bool) {
 	session, err := mgo.Dial(db.DatabaseURL)
 	if err != nil {
 		panic(err)
@@ -132,7 +133,7 @@ func (db *MongoDB) GetTrackID(id string) (TrackID, bool) {
 	idT := TrackID{}
 	ok := true
 
-	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(nil).Select(bson.M{"paragliderid": bson.M{"$elemMatch": bson.M{"id": id}}}).One(&idT)
+	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(nil).Select(bson.M{"paragliderid": bson.M{"$elemMatch": bson.M{"id": field}}}).One(&idT)
 
 	if err != nil {
 		ok = false
@@ -186,4 +187,21 @@ func (db *MongoDB) GetAllID() []TrackID {
 	}
 
 	return allID
+}
+
+// GetTrackMeta handles
+func (db *MongoDB) GetTrackMeta(id string) TrackMeta {
+	session, err := mgo.Dial(db.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
+	var trackdata collection
+
+	err = session.DB(db.DatabaseName).C(db.CollectionName).Find(bson.M{"paragliderid": bson.M{"id": id}}).One(&trackdata)
+
+	trackda := TrackMeta{trackdata.Track.Date, trackdata.Track.Pilot, trackdata.Track.Glider, trackdata.Track.GliderID, trackdata.Track.TrackLength, trackdata.Track.TrackSrcURL}
+	log.Println(trackda)
+	return trackda
 }

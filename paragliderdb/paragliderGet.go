@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -55,5 +56,67 @@ func getServerTime() string {
 func HandlerTrackArray(w http.ResponseWriter, r *http.Request) {
 	all := GlobalDB.GetAllID()
 	json.NewEncoder(w).Encode(&all)
+
+}
+
+// HandleOneTrackMeta handles all the api/track/<id> requests
+func HandleOneTrackMeta(w http.ResponseWriter, r *http.Request, id string) {
+	single := GlobalDB.GetTrackMeta(id)
+	json.NewEncoder(w).Encode(&single)
+}
+
+// HandlesField handles all the api/track/<id>/<field> requests
+func HandlesField(w http.ResponseWriter, r *http.Request, field string, id string) {
+	single := GlobalDB.GetTrackMeta(id)
+
+	// maybe a better way to solve this, couldnt find one since i kept
+	// getting plain/text what every i tryed, in this switch we make
+	// a temporary struct for the field we are going give back as json
+	switch field {
+	case "H_date":
+		type temp struct {
+			Date string `json:"H_date"`
+		}
+		date := temp{single.Date.String()}
+		json.NewEncoder(w).Encode(&date)
+	case "pilot":
+		type temp struct {
+			Temp string `json:"pilot"`
+		}
+		tempp := temp{single.Pilot}
+		json.NewEncoder(w).Encode(&tempp)
+
+	case "glider":
+		type temp struct {
+			Temp string `json:"glider"`
+		}
+		tempp := temp{single.Glider}
+		json.NewEncoder(w).Encode(&tempp)
+
+	case "glider_id":
+		type temp struct {
+			Temp string `json:"glider_id"`
+		}
+		tempp := temp{single.GliderID}
+		json.NewEncoder(w).Encode(&tempp)
+
+	case "track_length":
+		type temp struct {
+			Temp string `json:"track_length"`
+		}
+		tempp := temp{strconv.Itoa(int(single.TrackLength))}
+		json.NewEncoder(w).Encode(&tempp)
+
+	case "track_src_url":
+		type temp struct {
+			Temp string `json:"track_src_url"`
+		}
+		tempp := temp{single.TrackSrcURL}
+		json.NewEncoder(w).Encode(&tempp)
+
+	default:
+		// if this happends something is wrong
+		panic("shouldnt happend with the fields above")
+	}
 
 }

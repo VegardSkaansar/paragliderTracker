@@ -48,7 +48,7 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 	// check if the lenght was 4 and parts[3] is not rubbish
 
 	if len(parts) == 4 {
-		if parts[3] == "track" {
+		if parts[3] == "track" && parts[2] == "api" {
 			// will respond with array of all tracks id
 			if r.Method == "GET" {
 				HandlerTrackArray(w, r)
@@ -61,6 +61,49 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		}
 	}
+
+	// here we know that when len is 5 the url should be
+	// api/track/<id> and this handles that request and
+	// checks for valid ids
+	if len(parts) == 5 {
+		if parts[3] == "track" && parts[2] == "api" {
+			if r.Method == "GET" {
+				if CheckForValidID(parts[4]) {
+					HandleOneTrackMeta(w, r, parts[4])
+				} else {
+					http.Error(w, "Rubbish id, Please enter a valid one", http.StatusBadRequest)
+				}
+			} else {
+				http.Error(w, http.StatusText(405), 405)
+			}
+		} else {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		}
+	}
+
+	// here the length is 6 and the url should be api/track/id/field
+	if len(parts) == 6 {
+		if parts[3] == "track" && parts[2] == "api" {
+			if r.Method == "GET" {
+				if CheckForValidID(parts[4]) {
+					if CheckForValidField(parts[5]) {
+						HandlesField(w, r, parts[5], parts[4])
+					} else {
+						http.Error(w, "Rubbish field, Please enter a valid one", http.StatusBadRequest)
+					}
+				} else {
+					http.Error(w, "Rubbish id, Please enter a valid one", http.StatusBadRequest)
+					return
+				}
+			} else {
+				http.Error(w, http.StatusText(405), 405)
+				return
+			}
+		} else {
+			http.Error(w, "rubbish url, Please enter a valid path", http.StatusBadRequest)
+		}
+	}
+
 }
 
 /*   This is the json format whenever u use get on the right path
@@ -134,4 +177,44 @@ func GenerateRandomString(s int) (string, error) {
 		return "", err
 	}
 	return base64.URLEncoding.EncodeToString(b), err
+}
+
+// CheckForValidID checks if a id is in the db
+func CheckForValidID(id string) bool {
+
+	all := GlobalDB.GetAllID()
+
+	for _, data := range all {
+		if data.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+// CheckForValidField check if the fields is one of the expected one
+// or default will set false
+func CheckForValidField(field string) bool {
+	switch field {
+	case "H_date":
+		return true
+
+	case "pilot":
+		return true
+
+	case "glider":
+		return true
+
+	case "glider_id":
+		return true
+
+	case "track_length":
+		return true
+
+	case "track_src_url":
+		return true
+
+	default:
+		return false
+	}
 }
