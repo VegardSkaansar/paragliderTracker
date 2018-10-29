@@ -37,11 +37,11 @@ type TrackID struct {
 
 // Ticker handles the ticker date of whole collection
 type Ticker struct {
-	Tlatest    bson.ObjectId `json:"t_latest"`
-	Tstart     bson.ObjectId `json:"t_start"`
-	Tstop      bson.ObjectId `json:"t_stop"`
-	Tracks     []string      `json:"tracks"`
-	Processing time.Duration `json: "processing"`
+	Tlatest    int64    `json:"t_latest"`
+	Tstart     int64    `json:"t_start"`
+	Tstop      int64    `json:"t_stop"`
+	Tracks     []string `json:"tracks"`
+	Processing int64    `json:"processing"`
 }
 
 // ------------------------------------------------------------------------
@@ -82,8 +82,9 @@ type TrackerDB interface {
 	GetAllID() []TrackID
 	CheckIfURLIsAlreadyTracked(url string) bool
 	GetTrackMeta(id string) TrackMeta
-	GetLatestTimestamp() Ticker
+	GetTicker() (bson.ObjectId, bson.ObjectId)
 	GetLatestObjectID() bson.ObjectId
+	RequestTimestamp(i int64)
 }
 
 // ------------------------------------------------------------------------
@@ -222,22 +223,37 @@ func (db *MongoDB) GetTrackMeta(id string) TrackMeta {
 	return trackda
 }
 
-//GetLatestTimestamp gives us the timestamp of latest added track
-func (db *MongoDB) GetLatestTimestamp() Ticker {
+//GetTicker gives us the timestamp of latest start stop and proccessing time
+func (db *MongoDB) GetTicker() (bson.ObjectId, bson.ObjectId) {
+
 	session, err := mgo.Dial(db.DatabaseURL)
 	if err != nil {
 		panic(err)
 	}
 	defer session.Close()
 
-	var result []Ticker
-	//timestamp := time.Unix()
+	var col []collection
+	var result []bson.ObjectId
 
-	//filter := bson.M{"_id": bson.M{"$gt": bson.NewObjectIdWithTime(time.Unix(timestamp+1, 0))}}
-	//session.DB(db.DatabaseName).C(db.CollectionName).Find(filter).Sort("_id").All(&result)
+	session.DB(db.DatabaseName).C(db.CollectionName).Find(nil).All(&col)
 
-	log.Println(result)
-	return Ticker{}
+	for _, data := range col {
+		result = append(result, data.ID)
+	}
+
+	start := result[0]
+	stop := result[0]
+
+	for i := 0; i < len(result); i++ {
+		if start.Time().Unix() > result[i].Time().Unix() {
+			start = result[i]
+		}
+		if i == len(result)-1 {
+			stop = result[i]
+		}
+	}
+
+	return start, stop
 
 }
 
@@ -267,4 +283,14 @@ func (db *MongoDB) GetLatestObjectID() bson.ObjectId {
 	}
 	log.Println(ob)
 	return ob
+}
+
+// RequestTimestamp finds all objects with higher timestamp than i
+func (db *MongoDB) RequestTimestamp(i int64) {
+	session, err := mgo.Dial(db.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+	defer session.Close()
+
 }

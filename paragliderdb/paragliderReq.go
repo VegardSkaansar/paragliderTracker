@@ -5,7 +5,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	igc "github.com/marni/goigc"
 )
@@ -13,6 +15,7 @@ import (
 // RootHandler handles the root of the api
 // And sends the requests where it should be
 func RootHandler(w http.ResponseWriter, r *http.Request) {
+	startprocess := time.Now().UnixNano() / int64(time.Millisecond)
 
 	parts := strings.Split(r.URL.Path, "/")
 	// if url /paragliding/"" redirect to api
@@ -60,7 +63,7 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 		} else if parts[3] == "ticker" && parts[2] == "api" {
 			//handles api/ticker and we know parts[1] are paragliding
 			if r.Method == "GET" {
-				//		HandlesTicker(w, r)
+				HandlesTicker(w, r, startprocess)
 			} else {
 				http.Error(w, http.StatusText(405), 405)
 			}
@@ -88,6 +91,10 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 			// handles latest timestamp
 			HandleLatestTimestamp(w, r)
 
+		} else if parts[3] == "ticker" && parts[2] == "api" {
+			if nr, err := strconv.Atoi(parts[4]); err == nil {
+				HandleTimestamp(w, r, int64(nr))
+			}
 		} else {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		}

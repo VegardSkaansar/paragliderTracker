@@ -111,3 +111,25 @@ func HandleLatestTimestamp(w http.ResponseWriter, r *http.Request) {
 	log.Println(one)
 	json.NewEncoder(w).Encode(one.Time().Unix())
 }
+
+//HandlesTicker handles a ticker struct and format it to json for a get request
+func HandlesTicker(w http.ResponseWriter, r *http.Request, startprocess int64) {
+	process := (time.Now().UnixNano() / int64(time.Millisecond)) - startprocess
+	start, stop := GlobalDB.GetTicker()
+	var tra []string
+
+	if len(GlobalDB.GetAllID()) <= TICKERIDLENGTH {
+		for i := 0; i < len(GlobalDB.GetAllID()); i++ {
+			tra = append(tra, GlobalDB.GetAllID()[i].ID)
+		}
+	}
+
+	newTicker := Ticker{start.Time().Unix(), stop.Time().Unix(), GlobalDB.GetLatestObjectID().Time().Unix(), tra, process}
+
+	json.NewEncoder(w).Encode(&newTicker)
+}
+
+// HandleTimestamp handles timestamp from client
+func HandleTimestamp(w http.ResponseWriter, r *http.Request, i int64) {
+	GlobalDB.RequestTimestamp(i)
+}
