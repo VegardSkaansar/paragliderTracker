@@ -108,7 +108,6 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 			HandlerAdmin(w, r)
 		} else if parts[2] == "admin" && parts[3] == "api" && parts[4] == "track_count" {
 			json.NewEncoder(w).Encode(GlobalDB.TrackAmount())
-
 		} else {
 			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		}
@@ -144,6 +143,10 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			http.Error(w, "rubbish url, Please enter a valid path", http.StatusBadRequest)
 		}
+	}
+
+	if len(parts) > 6 {
+		http.Error(w, "url to long", http.StatusBadRequest)þ
 	}
 
 }
