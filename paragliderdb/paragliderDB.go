@@ -379,8 +379,10 @@ func (db *MongoDB) DeleteWebhook(id string) bool {
 	defer session.Close()
 
 	err = session.DB(db.DatabaseName).C(db.WebhookCollectionName).Remove(bson.M{"webhook": id})
-
-	return err == nil
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 // AdmimDeleteAll deletes all of the track in db
