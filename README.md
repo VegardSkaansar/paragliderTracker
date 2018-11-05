@@ -33,7 +33,7 @@ Returns a specific field from the metadata as text.
 ## GET /paragliding/api/ticker/
 Returns the timestamp of the latest added track.
 
-##GET /paragliding/api/ticker/<timestamp>
+## GET /paragliding/api/ticker/<timestamp>
 Returns all tracks with higher timestamp than <timestamp>.
 
 # Webhook api
