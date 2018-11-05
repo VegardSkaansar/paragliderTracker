@@ -7,8 +7,8 @@ import (
 // Webhookinfo handles a webhook request
 type Webhookinfo struct {
 	ID                 bson.ObjectId `bson:"_id,omitempty" json:"-"`
-	URL                string        `json:"webhook_URL"`
-	MinTriggerValue    int           `json:"min_trigger_value" bson:"min_trigger_value"`
+	URL                string        `json:"webhookURL"`
+	MinTriggerValue    int           `json:"minTriggerValue" bson:"min_trigger_value"`
 	LatestInvokedTrack bson.ObjectId `bson:"latest_invoked_track" json:"-"`
 	WebhookID          string        `bson:"webhookid" json:"webhookid"`
 }
