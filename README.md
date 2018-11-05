@@ -11,7 +11,7 @@ I started downloading this version and test it before i heard about globalsign/m
 At first i didnt understand how i would get my clocktrigger on openstack but after the lecture of docker compose i got an idea of how to do it. But this was after the submition, so this have not
 been implemented.
 
-#Paraglider track
+# Paraglider track
 
 ## GET /paragliding/api
 Returns the uptime of the application.
@@ -33,7 +33,7 @@ Returns a specific field from the metadata as text.
 ## GET /paragliding/api/ticker/
 Returns the timestamp of the latest added track.
 
-##GET /paragliding/api/ticker/<timestamp>
+## GET /paragliding/api/ticker/<timestamp>
 Returns all tracks with higher timestamp than <timestamp>.
 
 # Webhook api
