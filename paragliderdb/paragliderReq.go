@@ -146,7 +146,7 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(parts) > 6 {
-		http.Error(w, "url to long", http.StatusBadRequest)þ
+		http.Error(w, "url to long", http.StatusBadRequest)
 	}
 
 }
