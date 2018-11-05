@@ -378,7 +378,7 @@ func (db *MongoDB) DeleteWebhook(id string) bool {
 	}
 	defer session.Close()
 
-	err = session.DB(db.DatabaseName).C(db.WebhookCollectionName).Remove(bson.M{"webhook": id})
+	err = session.DB(db.DatabaseName).C(db.WebhookCollectionName).Remove(bson.M{"webhookid": id})
 	if err != nil {
 		return false
 	}
