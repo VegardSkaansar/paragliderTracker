@@ -171,6 +171,13 @@ func WebhookGetHandler(w http.ResponseWriter, r *http.Request, id string) {
 // WebhookDeleteHandler handles deleting a webhook
 func WebhookDeleteHandler(w http.ResponseWriter, r *http.Request, id string) {
 
+	str, ok := GlobalDB.GetWebhook(id)
+
+	if ok == false {
+		http.Error(w, "couldnt find that id", 500)
+		return
+	}
+
 	okk := GlobalDB.DeleteWebhook(id)
 
 	if !okk {
