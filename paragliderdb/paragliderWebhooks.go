@@ -10,7 +10,7 @@ type Webhookinfo struct {
 	URL                string        `json:"webhookURL"`
 	MinTriggerValue    int           `json:"minTriggerValue" bson:"min_trigger_value"`
 	LatestInvokedTrack bson.ObjectId `bson:"latest_invoked_track" json:"-"`
-	WebhookID          string        `bson:"webhookid" json:"webhookid"`
+	WebhookID          string        `bson:"webhookid"`
 }
 
 // WebhookResponse gives a respod when get request
