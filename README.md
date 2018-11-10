@@ -22,10 +22,10 @@ Registers a track, and one track can only be added once.
 ## GET /paragliding/api/track
 Gets a array with all the unique track ids.
 
-## GET /paragliding/api/track/<id>
+## GET /paragliding/api/track/id
 Returns metadata from a track with the specified id.
 
-## GET /paragliding/api/track/<id>/<field>
+## GET /paragliding/api/track/id/field
 Returns a specific field from the metadata as text.
 
 # Ticker api
@@ -33,7 +33,7 @@ Returns a specific field from the metadata as text.
 ## GET /paragliding/api/ticker/
 Returns the timestamp of the latest added track.
 
-## GET /paragliding/api/ticker/<timestamp>
+## GET /paragliding/api/ticker/timestamp
 Returns all tracks with higher timestamp than <timestamp>.
 
 # Webhook api
@@ -41,8 +41,8 @@ Returns all tracks with higher timestamp than <timestamp>.
 ## POST /paragliding/api/webhook/new_track
 Registers a webhook that will be notifyed when a new track is added.
 
-## GET /paragliding/api/webhook/new_track/<webhook_id>
+## GET /paragliding/api/webhook/new_track/webhook_id
 Gets details of a webhook.
 
-## Delete /paragliding/api/webhook/new_track/<webhook_id>
+## Delete /paragliding/api/webhook/new_track/webhook_id
 Delete the webhook with this specified id.
